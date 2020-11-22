@@ -12,5 +12,10 @@
   "dependencies": {
     "@openzeppelin/contracts": "^3.2.0",
     "dotenv": "^8.2.0"
+  },
+  "scripts": {
+    "deploy": "cfxtruffle deploy",
+    "withdraw": "node ./scripts/withdraw.js",
+    "destroy": "node ./scripts/destroy.js"
   }
 }
