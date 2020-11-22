@@ -1,0 +1,11 @@
+{
+  "name": "tokenized-stake",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/aalu1418/tokenized-stake.git",
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "conflux-truffle": "^0.0.8"
+  }
+}
