@@ -1,37 +1,30 @@
 # tokenized-stake
 
 ```
-Starting migrations...
-======================
-> Network name:    'development'
-> Network id:      10001
-> Block gas limit: 30000000 (0x1c9c380)
-
-
 1_deploy.js
 ===========
 
    Deploying 'StakedCFX'
    ---------------------
-   > transaction hash:    0x0497a6fde0f6de117cd9c4bb07abeba68dd76ff63d02bf592a2bd46d776e96ad
-   > Blocks: 7            Seconds: 9
-   > contract address:    0x81878de694288b339C88f375CE65Dcf39B9fa1d0
-   > block number:        2948382
-   > block timestamp:     1606072679
+   > transaction hash:    0x2471fa6233a6150dcca6544d78fc56e60f168418a00ffe061fb4778b28dc1076
+   > Blocks: 12           Seconds: 9
+   > contract address:    0x8Ef9451fEAf9d713091a9E9A88FC0280b4F67a41
+   > block number:        2995877
+   > block timestamp:     1606103813
    > account:             0x15fd1E4F13502b1a8BE110F100EC001d0270552d
-   > balance:             368.564232604966691615
-   > gas used:            2156965 (0x20e9a5)
+   > balance:             362.987573324966636383
+   > gas used:            2250898 (0x225892)
    > gas price:           20 GDrip
-   > value sent:          0 CFX
-   > total cost:          0.0431393 CFX
+   > value sent:          1 CFX
+   > total cost:          1.04501796 CFX
 
    > Saving artifacts
    -------------------------------------
-   > Total cost:           0.0431393 CFX
+   > Total cost:          1.04501796 CFX
 
 
 Summary
 =======
 > Total deployments:   1
-> Final cost:          0.0431393 CFX
+> Final cost:          1.04501796 CFX
 ```
