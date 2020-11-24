@@ -22,6 +22,15 @@ async function main() {
     .withdraw()
     .sendTransaction({ from: account })
     .executed();
+
+  // await cfx
+  //   .sendTransaction({
+  //     from: account,
+  //     to: CONTRACT_ADDR,
+  //     value: Drip.fromCFX(1),
+  //     gas: "15000000",
+  //   })
+  //   .executed();
 }
 
 main().catch((e) => console.error(e));

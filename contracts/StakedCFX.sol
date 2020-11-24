@@ -47,7 +47,7 @@ contract StakedCFX is ERC20 {
     function _calculateInterest(uint256 _balance, uint256 _blockNumber) internal view returns (uint256 interest) {
         uint256 _percentageCalc = 1e18; //starting with 1
         uint256 blockDiff = block.number.sub(_blockNumber);
-        if (blockDiff > 0) { //exponentiation by squaring (is there a more efficient method?)
+        if (blockDiff > 0) { //exponentiation by squaring (is there a more efficient method, still runs out of gas)
             uint256 loopNum = blockDiff.sub(blockDiff.mod(2)).div(2);
             // https://en.m.wikipedia.org/wiki/Exponentiation_by_squaring
             for (uint i = 0; i < loopNum; i++) {
