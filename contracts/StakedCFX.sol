@@ -10,6 +10,7 @@ contract StakedCFX is ERC20 {
     mapping (address => uint256) private _lastBlockCalc;
     uint256 private baseRate = 4; //4 percent (staking yield)
     uint256 private _percentage = baseRate.mul(1e16).div(63072000).add(1e18); //1e16 maintains 0.04/63072000, scaled by 1e18
+    uint256 private _percentage2 = _percentage.mul(_percentage).div(1e18); // squared term
 
     Staking internal s = Staking(0x0888000000000000000000000000000000000002);
 
@@ -45,13 +46,21 @@ contract StakedCFX is ERC20 {
 
     function _calculateInterest(uint256 _balance, uint256 _blockNumber) internal view returns (uint256 interest) {
         uint256 _percentageCalc = 1e18; //starting with 1
-        if (block.number.sub(_blockNumber) > 0) { //exponential through a for loop (need more efficient mechanism)
-            for (uint i = 0; i < block.number.sub(_blockNumber); i++) { //number of loops = difference in block
-                _percentageCalc = _percentageCalc.mul(_percentage).div(1e18); //divide by 1e18 to maintain 1e18 scaling
+        uint256 blockDiff = block.number.sub(_blockNumber);
+        if (blockDiff > 0) { //exponentiation by squaring (is there a more efficient method?)
+            uint256 loopNum = blockDiff.sub(blockDiff.mod(2)).div(2);
+            // https://en.m.wikipedia.org/wiki/Exponentiation_by_squaring
+            for (uint i = 0; i < loopNum; i++) {
+                _percentageCalc = _percentageCalc.mul(_percentage2).div(1e18); //divide by 1e18 to maintain 1e18 scaling
             }
+
+            if (blockDiff.mod(2) == 1) {
+              _percentageCalc = _percentageCalc.mul(_percentage).div(1e18);
+            }
+
             return _balance.mul(_percentageCalc).div(1e18).sub(_balance); //calculate new balance, remove scaling, subtract base amount to return interest amount
         } else {
-            assert(block.number.sub(_blockNumber) == 0);
+            assert(blockDiff == 0);
             return 0; //return balance if block.number.sub(_blockNumber) = 0
         }
 

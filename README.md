@@ -4,27 +4,27 @@
 1_deploy.js
 ===========
 
-   Deploying 'StakedCFX'
+   Replacing 'StakedCFX'
    ---------------------
-   > transaction hash:    0x2471fa6233a6150dcca6544d78fc56e60f168418a00ffe061fb4778b28dc1076
-   > Blocks: 12           Seconds: 9
-   > contract address:    0x8Ef9451fEAf9d713091a9E9A88FC0280b4F67a41
-   > block number:        2995877
-   > block timestamp:     1606103813
+   > transaction hash:    0x4daef38f92e1c715e8f7afff94f0253758f8e47eaa698763c59d6e034fcc7acf
+   > Blocks: 15           Seconds: 9
+   > contract address:    0x88a5C110e12b9fff39102704f8AE1239E80Da12A
+   > block number:        3123376
+   > block timestamp:     1606189652
    > account:             0x15fd1E4F13502b1a8BE110F100EC001d0270552d
-   > balance:             362.987573324966636383
-   > gas used:            2250898 (0x225892)
+   > balance:             360.042925247224233421
+   > gas used:            2359023 (0x23feef)
    > gas price:           20 GDrip
    > value sent:          1 CFX
-   > total cost:          1.04501796 CFX
+   > total cost:          1.04718046 CFX
 
    > Saving artifacts
    -------------------------------------
-   > Total cost:          1.04501796 CFX
+   > Total cost:          1.04718046 CFX
 
 
 Summary
 =======
 > Total deployments:   1
-> Final cost:          1.04501796 CFX
+> Final cost:          1.04718046 CFX
 ```

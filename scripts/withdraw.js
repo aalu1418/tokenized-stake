@@ -9,7 +9,7 @@ async function main() {
   });
 
   const PRIVATE_KEY = process.env.PRIVATE_KEY;
-  const CONTRACT_ADDR = "0x8Ef9451fEAf9d713091a9E9A88FC0280b4F67a41";
+  const CONTRACT_ADDR = "0x88a5C110e12b9fff39102704f8AE1239E80Da12A";
 
   // ================================ Account =================================
   const account = cfx.wallet.addPrivateKey(PRIVATE_KEY); // create account instance
@@ -20,7 +20,8 @@ async function main() {
 
   let receipt = await contract
     .withdraw()
-    .call({ from: account })
+    .sendTransaction({ from: account })
+    .executed();
 }
 
 main().catch((e) => console.error(e));
