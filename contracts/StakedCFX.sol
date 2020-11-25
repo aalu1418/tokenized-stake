@@ -2,20 +2,51 @@
 
 pragma solidity ^0.6.0;
 
-// import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol";
+// import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./Staking.sol";
 
 contract StakedCFX is ERC20 {
     mapping (address => uint256) private _lastBlockCalc;
-    uint256 private baseRate = 4; //4 percent (staking yield)
-    uint256 private _percentage = baseRate.mul(1e16).div(63072000).add(1e18); //1e16 maintains 0.04/63072000, scaled by 1e18
-    uint256 private _percentage2 = _percentage.mul(_percentage).div(1e18); // squared term
+    mapping (uint256 => uint256) internal _interest;
+
+    //offline 2^n calculations
+    uint256[] internal twos = [1,2,4,8,16,32,64,128,256,512,1024,2048,4096,8192,16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,8388608,16777216,33554432,67108864,134217728,268435456];
 
     Staking internal s = Staking(0x0888000000000000000000000000000000000002);
 
     constructor() public payable ERC20("Staked CFX", "sCFX") {
       require(msg.value == 1e18, "must deploy with 1 CFX"); //deploy with 1 CFX to ensure tokens always can be restaked
+         // offline interest rate calculations for (1+0.04/63072000)^(2^n)*1e18
+        _interest[0] = 10000000006341958396;
+        _interest[1] = 10000000012683916797;
+        _interest[2] = 10000000025367833611;
+        _interest[3] = 10000000050735667286;
+        _interest[4] = 10000000101471334830;
+        _interest[5] = 10000000202942670691;
+        _interest[6] = 10000000405885345500;
+        _interest[7] = 10000000811770707475;
+        _interest[8] = 10000001623541480848;
+        _interest[9] = 10000003247083225285;
+        _interest[10] = 10000006494167504925;
+        _interest[11] = 10000012988339227271;
+        _interest[12] = 10000025976695324239;
+        _interest[13] = 10000051953458127348;
+        _interest[14] = 10000103907186170878;
+        _interest[15] = 10000207815452012091;
+        _interest[16] = 10000415635222750391;
+        _interest[17] = 10000831287720764622;
+        _interest[18] = 10001662644545456713;
+        _interest[19] = 10003325565529601881;
+        _interest[20] = 10006652236997812930;
+        _interest[21] = 10013308899221333368;
+        _interest[22] = 10026635511122515097;
+        _interest[23] = 10053341967290305958;
+        _interest[24] = 10106968471128051923;
+        _interest[25] = 10215081167637651134;
+        _interest[26] = 10434788326142539808;
+        _interest[27] = 10888480741140062773;
+        _interest[28] = 11855901285017805069;
     }
 
     function _transfer(address sender, address recipient, uint256 amount) internal override {
@@ -24,10 +55,10 @@ contract StakedCFX is ERC20 {
         uint256 balanceRecipient = balanceOf(recipient);
 
         // calculate interest for sender + recipient
-        uint interestSender = _calculateInterest(balanceSender, _lastBlockCalc[sender]);
+        uint interestSender = _calculateInterest(balanceSender, block.number.sub(_lastBlockCalc[sender]));
         uint interestRecipient = 0; //interest = 0 (special case when recipient has never had tokens or currently has none)
         if (_lastBlockCalc[sender] != 0 || balanceRecipient != 0) {
-            interestRecipient= _calculateInterest(balanceRecipient, _lastBlockCalc[sender]); //otherwise calculate
+            interestRecipient= _calculateInterest(balanceRecipient, block.number.sub(_lastBlockCalc[sender])); //otherwise calculate
         }
 
         // update last block that calculation was run + interested was distributed
@@ -44,18 +75,25 @@ contract StakedCFX is ERC20 {
         super._transfer(sender, recipient, amount);
     }
 
-    function _calculateInterest(uint256 _balance, uint256 _blockNumber) internal view returns (uint256 interest) {
-        uint256 _percentageCalc = 1e18; //starting with 1
-        uint256 blockDiff = block.number.sub(_blockNumber);
-        if (blockDiff > 0) { //exponentiation by squaring (is there a more efficient method, still runs out of gas)
-            uint256 loopNum = blockDiff.sub(blockDiff.mod(2)).div(2);
-            // https://en.m.wikipedia.org/wiki/Exponentiation_by_squaring
-            for (uint i = 0; i < loopNum; i++) {
-                _percentageCalc = _percentageCalc.mul(_percentage2).div(1e18); //divide by 1e18 to maintain 1e18 scaling
-            }
+    function _calculateInterest(uint256 _balance, uint256 blockDiff) public view returns (uint256 interest) {
+        if (blockDiff > 0) {
+            //exponentiation using binary search (offload computation as much as possible)
+            uint256 _percentageCalc = 1e18; //starting with 1
 
-            if (blockDiff.mod(2) == 1) {
-              _percentageCalc = _percentageCalc.mul(_percentage).div(1e18);
+            for (uint256 i = twos.length; i > 0; i--) { //start checking with largest interval
+                uint256 blockDiff_new = blockDiff.mod(twos[i.sub(1)]); //calculate remaining exponent
+
+                // apply precalculated interest of current exponent (if there was a change)
+                for (uint256 j = 0; j < blockDiff.sub(blockDiff_new).div(twos[i.sub(1)]); j++) {
+                    _percentageCalc = _percentageCalc.mul(_interest[i.sub(1)]).div(1e18);
+                }
+
+                // if no exponent left, break. Else, reset + continue
+                if (blockDiff_new == 0) {
+                    break;
+                } else {
+                    blockDiff = blockDiff_new;
+                }
             }
 
             return _balance.mul(_percentageCalc).div(1e18).sub(_balance); //calculate new balance, remove scaling, subtract base amount to return interest amount
@@ -63,7 +101,6 @@ contract StakedCFX is ERC20 {
             assert(blockDiff == 0);
             return 0; //return balance if block.number.sub(_blockNumber) = 0
         }
-
     }
 
     function _stake(uint256 amt) internal {
@@ -83,7 +120,7 @@ contract StakedCFX is ERC20 {
     function withdraw() external {
         uint256 balance = balanceOf(msg.sender); // get balances of sender + recipient
 
-        uint256 interest = _calculateInterest(balance, _lastBlockCalc[msg.sender]); // calculate interest for sender + recipient
+        uint256 interest = _calculateInterest(balance, block.number.sub(_lastBlockCalc[msg.sender])); // calculate interest for sender + recipient
 
         _lastBlockCalc[msg.sender] = block.number; // update last block that calculation was run + interested was distributed
 
@@ -101,7 +138,7 @@ contract StakedCFX is ERC20 {
 
         // mint interest if there is a non-zero balance
         if (balanceOf(msg.sender) > 0) {
-          uint256 interest = _calculateInterest(balanceOf(msg.sender), _lastBlockCalc[msg.sender]);
+          uint256 interest = _calculateInterest(balanceOf(msg.sender), block.number.sub(_lastBlockCalc[msg.sender]));
           _mint(msg.sender, interest);
         }
 
