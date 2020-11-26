@@ -9,7 +9,7 @@ async function main() {
   });
 
   const PRIVATE_KEY = process.env.PRIVATE_KEY;
-  const CONTRACT_ADDR = "0x88a5C110e12b9fff39102704f8AE1239E80Da12A";
+  const CONTRACT_ADDR = "0x8eC4B4816De6551E8495134EFF72D3B9E53b381C";
 
   // ================================ Account =================================
   const account = cfx.wallet.addPrivateKey(PRIVATE_KEY); // create account instance

@@ -2,8 +2,8 @@
 
 pragma solidity ^0.6.0;
 
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol";
-// import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+// import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./Staking.sol";
 
 contract StakedCFX is ERC20 {
@@ -18,35 +18,35 @@ contract StakedCFX is ERC20 {
     constructor() public payable ERC20("Staked CFX", "sCFX") {
       require(msg.value == 1e18, "must deploy with 1 CFX"); //deploy with 1 CFX to ensure tokens always can be restaked
          // offline interest rate calculations for (1+0.04/63072000)^(2^n)*1e18
-        _interest[0] = 10000000006341958396;
-        _interest[1] = 10000000012683916797;
-        _interest[2] = 10000000025367833611;
-        _interest[3] = 10000000050735667286;
-        _interest[4] = 10000000101471334830;
-        _interest[5] = 10000000202942670691;
-        _interest[6] = 10000000405885345500;
-        _interest[7] = 10000000811770707475;
-        _interest[8] = 10000001623541480848;
-        _interest[9] = 10000003247083225285;
-        _interest[10] = 10000006494167504925;
-        _interest[11] = 10000012988339227271;
-        _interest[12] = 10000025976695324239;
-        _interest[13] = 10000051953458127348;
-        _interest[14] = 10000103907186170878;
-        _interest[15] = 10000207815452012091;
-        _interest[16] = 10000415635222750391;
-        _interest[17] = 10000831287720764622;
-        _interest[18] = 10001662644545456713;
-        _interest[19] = 10003325565529601881;
-        _interest[20] = 10006652236997812930;
-        _interest[21] = 10013308899221333368;
-        _interest[22] = 10026635511122515097;
-        _interest[23] = 10053341967290305958;
-        _interest[24] = 10106968471128051923;
-        _interest[25] = 10215081167637651134;
-        _interest[26] = 10434788326142539808;
-        _interest[27] = 10888480741140062773;
-        _interest[28] = 11855901285017805069;
+        _interest[0] = 1000000000634195839;
+        _interest[1] = 1000000001268391679;
+        _interest[2] = 1000000002536783361;
+        _interest[3] = 1000000005073566728;
+        _interest[4] = 1000000010147133483;
+        _interest[5] = 1000000020294267069;
+        _interest[6] = 1000000040588534550;
+        _interest[7] = 1000000081177070747;
+        _interest[8] = 1000000162354148084;
+        _interest[9] = 1000000324708322528;
+        _interest[10] = 1000000649416750492;
+        _interest[11] = 1000001298833922727;
+        _interest[12] = 1000002597669532423;
+        _interest[13] = 1000005195345812734;
+        _interest[14] = 1000010390718617087;
+        _interest[15] = 1000020781545201209;
+        _interest[16] = 1000041563522275039;
+        _interest[17] = 1000083128772076462;
+        _interest[18] = 1000166264454545671;
+        _interest[19] = 1000332556552960188;
+        _interest[20] = 1000665223699781293;
+        _interest[21] = 1001330889922133336;
+        _interest[22] = 1002663551112251509;
+        _interest[23] = 1005334196729030595;
+        _interest[24] = 1010696847112805192;
+        _interest[25] = 1021508116763765113;
+        _interest[26] = 1043478832614253980;
+        _interest[27] = 1088848074114006277;
+        _interest[28] = 1185590128501780506;
     }
 
     function _transfer(address sender, address recipient, uint256 amount) internal override {
@@ -75,17 +75,22 @@ contract StakedCFX is ERC20 {
         super._transfer(sender, recipient, amount);
     }
 
-    function _calculateInterest(uint256 _balance, uint256 blockDiff) public view returns (uint256 interest) {
+    function _calculateInterest(uint256 _balance, uint256 blockDiff) internal view returns (uint256 interest) {
         if (blockDiff > 0) {
             //exponentiation using binary search (offload computation as much as possible)
             uint256 _percentageCalc = 1e18; //starting with 1
 
-            for (uint256 i = twos.length; i > 0; i--) { //start checking with largest interval
-                uint256 blockDiff_new = blockDiff.mod(twos[i.sub(1)]); //calculate remaining exponent
+            for (uint256 i = 0; i < twos.length; i++) { //start checking with largest interval
+                uint256 ind = twos.length.sub(1).sub(i);
+                uint256 twosVal = twos[ind];
+                uint256 blockDiff_new = blockDiff.mod(twosVal); //calculate remaining exponent
 
                 // apply precalculated interest of current exponent (if there was a change)
-                for (uint256 j = 0; j < blockDiff.sub(blockDiff_new).div(twos[i.sub(1)]); j++) {
-                    _percentageCalc = _percentageCalc.mul(_interest[i.sub(1)]).div(1e18);
+                if (blockDiff != blockDiff_new) {
+                    uint256 loopMax = blockDiff.sub(blockDiff_new).div(twosVal);
+                    for (uint256 j = 0; j < loopMax; j++) {
+                        _percentageCalc = _percentageCalc.mul(_interest[ind]).div(1e18);
+                    }
                 }
 
                 // if no exponent left, break. Else, reset + continue
