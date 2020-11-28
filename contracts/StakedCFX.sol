@@ -118,7 +118,7 @@ contract StakedCFX is ERC20 {
       s.withdraw(balance);
 
       // restake all tokens minus the amount to be returned
-      assert(address(this).balance.sub(amt) >= 1e18); // balance will always be >= 1 CFX
+      require(address(this).balance.sub(amt) >= 1e18, "base amount must be >= 1 CFX"); // balance will always be >= 1 CFX
       _stake(address(this).balance.sub(amt));
     }
 
@@ -135,7 +135,7 @@ contract StakedCFX is ERC20 {
 
         _burn(msg.sender, balance.add(interest)); //burn tokens
 
-        address(this).transfer(balance.add(interest)); // send tokens
+        msg.sender.transfer(balance.add(interest)); // send CFX to msg.sender
     }
 
     receive() external payable {
