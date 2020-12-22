@@ -56,6 +56,8 @@ module.exports = {
       network_id: "*",
       type: "conflux",
       privateKeys: process.env.PRIVATE_KEY,
+      gas: 3000000,
+      gasPrice: 1,
     },
 
     // Another network with more advanced options...
