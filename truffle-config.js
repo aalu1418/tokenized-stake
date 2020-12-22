@@ -45,6 +45,12 @@ module.exports = {
     // options below to some value.
     //
     development: {
+      host: "localhost",
+      port: 12537,
+      network_id: "*",
+      type: "conflux",
+    },
+    testnet: {
       host: "test.confluxrpc.org",
       port: 80,
       network_id: "*",
