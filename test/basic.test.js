@@ -142,22 +142,59 @@ contract("StakedCFX", async (accounts) => {
   })
 
   it("transfer to self does not duplicate interest tokens", async () => {
-    const tx = await this.token.transfer(initialHolder, 0, {
-      from: initialHolder,
+    // using recipient user to establish the storage staking (so it won't affect the withdraw calculations)
+    const tx = await this.token.transfer(recipient, 0, {
+      from: recipient,
     });
 
     // accumulated interest
     truffleAssert.eventEmitted(tx, "Transfer", (ev) => {
-      return ev.from == ZERO_ADDRESS && ev.to == initialHolder;
+      return ev.from == ZERO_ADDRESS && ev.to == recipient;
     });
 
     // transfer amount
     truffleAssert.eventEmitted(tx, "Transfer", (ev) => {
-      return ev.from == initialHolder && ev.to == initialHolder;
+      return ev.from == recipient && ev.to == recipient;
     });
 
     assert.equal(2, tx.logs.length, "only two logs emitted")
   });
 
-  it("can withdraw CFX tokens from sCFX", async () => {});
+  it("can withdraw CFX tokens from sCFX", async () => {
+    const cfxBalance = await web3.cfx.getBalance(recipient);
+    const tokenBalance = await this.token.balanceOf(recipient);
+
+    assert.notEqual(0, tokenBalance, "user has balance")
+
+    //setting minimal gas fee for testing to minimize impact of gas on returned value
+    const tx = await this.token.withdraw({from: recipient, gasPrice: "0x1"});
+
+    // mint interest
+    truffleAssert.eventEmitted(tx, "Transfer", (ev) => {
+      return ev.from == ZERO_ADDRESS && ev.to == recipient;
+    });
+
+    // burn all tokens
+    truffleAssert.eventEmitted(tx, "Transfer", (ev) => {
+      return ev.from == recipient && ev.to == ZERO_ADDRESS;
+    });
+
+    assert.equal(2, tx.logs.length, "only two logs emitted")
+
+    const cfxBalanceEnd = await web3.cfx.getBalance(recipient);
+    const tokenBalanceEnd = await this.token.balanceOf(recipient);
+
+    assert.equal(0, tokenBalanceEnd.toString(), "all balance withdrawn")
+    assert.isAbove(Number(cfxBalanceEnd-cfxBalance), Number(tokenBalance), "sCFX converted to CFX + interest")
+  });
+
+  it("all CFX is withdrawable", async () => {
+    const totalSupplyInit = await this.token.totalSupply();
+    assert.notEqual(Number(totalSupplyInit), 0, "total supply is not zero")
+
+    await truffleAssert.passes(this.token.withdraw(), "tokens from initial holder withdrawn");
+
+    const totalSupply = await this.token.totalSupply();
+    assert.equal(Number(totalSupply), 0, "final total supply is zero")
+  });
 });
